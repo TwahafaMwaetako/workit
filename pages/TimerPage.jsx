@@ -6,7 +6,8 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
 const TimerPage = () => {
   const [time, setTime] = useState(0);
-  const [inputTime, setInputTime] = useState('');
+  const [inputMinutes, setInputMinutes] = useState('');
+  const [inputSeconds, setInputSeconds] = useState('');
   const [isActive, setIsActive] = useState(false);
 
   useEffect(() => {
@@ -23,8 +24,10 @@ const TimerPage = () => {
   }, [isActive, time]);
 
   const toggleTimer = () => {
-    if (!isActive && time === 0 && inputTime) {
-      setTime(parseInt(inputTime) * 60);
+    if (!isActive && time === 0) {
+      const minutes = parseInt(inputMinutes) || 0;
+      const seconds = parseInt(inputSeconds) || 0;
+      setTime(minutes * 60 + seconds);
     }
     setIsActive(!isActive);
   };
@@ -32,7 +35,8 @@ const TimerPage = () => {
   const resetTimer = () => {
     setTime(0);
     setIsActive(false);
-    setInputTime('');
+    setInputMinutes('');
+    setInputSeconds('');
   };
 
   const formatTime = (seconds) => {
@@ -41,8 +45,11 @@ const TimerPage = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleInputChange = (event) => {
-    setInputTime(event.target.value);
+  const handleInputChange = (setter) => (event) => {
+    const value = event.target.value;
+    if (value === '' || (parseInt(value) >= 0 && parseInt(value) < 60)) {
+      setter(value);
+    }
   };
 
   return (
@@ -56,15 +63,28 @@ const TimerPage = () => {
                 {formatTime(time)}
               </Typography>
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={6}>
               <TextField
                 fullWidth
-                label="Set timer (minutes)"
+                label="Minutes"
                 variant="outlined"
                 type="number"
-                value={inputTime}
-                onChange={handleInputChange}
+                value={inputMinutes}
+                onChange={handleInputChange(setInputMinutes)}
                 disabled={isActive || time > 0}
+                inputProps={{ min: 0, max: 59 }}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                label="Seconds"
+                variant="outlined"
+                type="number"
+                value={inputSeconds}
+                onChange={handleInputChange(setInputSeconds)}
+                disabled={isActive || time > 0}
+                inputProps={{ min: 0, max: 59 }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -74,7 +94,7 @@ const TimerPage = () => {
                 color="primary" 
                 fullWidth
                 startIcon={isActive ? <PauseIcon /> : <PlayArrowIcon />}
-                disabled={!inputTime && time === 0}
+                disabled={!inputMinutes && !inputSeconds && time === 0}
               >
                 {isActive ? 'Pause' : (time > 0 ? 'Resume' : 'Start')}
               </Button>
